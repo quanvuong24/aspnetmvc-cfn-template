@@ -50,7 +50,7 @@ Resources:
     Properties:
       CidrBlock: !Ref VpcCIDR
       EnableDnsSupport: true
-      EnableDnsHostnames: true
+      EnableDnsHostnames: false
       Tags:
         - Key: Name
           Value: !Ref EnvironmentName
@@ -96,7 +96,7 @@ Resources:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [ 0, !GetAZs '' ]
       CidrBlock: !Ref PrivateSubnet1CIDR
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName} 1st Private Subnet (AZ1)
@@ -107,7 +107,7 @@ Resources:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [ 1, !GetAZs '' ]
       CidrBlock: !Ref PrivateSubnet2CIDR
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName} 1st Private Subnet (AZ2)
