@@ -9,6 +9,22 @@ Parameters:
     Description: An environment name that will be prefixed to resource names
     Type: String
 
+  ELBIngressPort:
+    Description: The ELB ingress port used by security groups
+    Type: Number
+    MinValue: 0
+    MaxValue: 65535
+    ConstraintDescription: TCP ports must be between 0 - 65535
+    Default: 80
+
+  AppIngressPort:
+    Description: The application ingress port used by security groups
+    Type: Number
+    MinValue: 0
+    MaxValue: 65535
+    ConstraintDescription: TCP ports must be between 0 - 65535
+    Default: 80
+
   VpcCIDR:
     Description: Please enter the IP range (CIDR notation) for this VPC
     Type: String
@@ -271,6 +287,21 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable4
       SubnetId: !Ref PrivateSubnet4
 
+  ELBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "elb-sg"
+      GroupDescription: "Load Balancer Security group rules"
+      SecurityGroupEgress: 
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: !Ref ELBIngressPort
+          ToPort: !Ref ELBIngressPort
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref VPC
+
   AppSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -281,9 +312,9 @@ Resources:
           CidrIp: 0.0.0.0/0
       SecurityGroupIngress: 
         - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
+          FromPort: !Ref AppIngressPort
+          ToPort: !Ref AppIngressPort
+          SourceSecurityGroupId: !Ref ELBSecurityGroup
       VpcId: !Ref VPC
 
   DBSecurityGroup:
@@ -305,6 +336,8 @@ Outputs:
   VPC:
     Description: A reference to the created VPC
     Value: !Ref VPC
+    Export:
+      Name: !Sub "${AWS::StackName}-VPCID"
 
   PublicSubnets:
     Description: A list of the public subnets
@@ -317,31 +350,66 @@ Outputs:
   PublicSubnet1:
     Description: A reference to the 1st public subnet in the 1st Availability Zone
     Value: !Ref PublicSubnet1
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnet1ID"
 
   PublicSubnet2:
     Description: A reference to the 1st public subnet in the 2nd Availability Zone
     Value: !Ref PublicSubnet2
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnet2ID"
 
   PrivateSubnet1:
     Description: A reference to the 1st private subnet in the 1st Availability Zone
     Value: !Ref PrivateSubnet1
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateSubnet1ID"
 
   PrivateSubnet2:
     Description: A reference to the 1st private subnet in the 2nd Availability Zone
     Value: !Ref PrivateSubnet2
-  
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateSubnet2ID"
+
   PrivateSubnet3:
     Description: A reference to the 2nd private subnet in the 1st Availability Zone
     Value: !Ref PrivateSubnet3
-  
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateSubnet3ID"
+
   PrivateSubnet4:
     Description: A reference to the 2nd private subnet in the 2nd Availability Zone
     Value: !Ref PrivateSubnet4
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateSubnet4ID"
+
+  ELBSecurityGroup:
+    Description: Loab Balancer Security group rule
+    Value: !Ref ELBSecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-ELBSecurityGroupID"
 
   AppSecurityGroup:
     Description: Application Security group rule
     Value: !Ref AppSecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-AppSecurityGroupID"
   
   DBSecurityGroup:
     Description: Database Security group rule
     Value: !Ref DBSecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-DBSecurityGroupID"
+
+  ELBIngressPort:
+    Description: ELB ingress port
+    Value: !Ref ELBIngressPort
+    Export:
+      Name: !Sub "${AWS::StackName}-ELBIngressPort"
+
+  AppIngressPort:
+    Description: App ingress port
+    Value: !Ref AppIngressPort
+    Export:
+      Name: !Sub "${AWS::StackName}-AppIngressPort"
+
