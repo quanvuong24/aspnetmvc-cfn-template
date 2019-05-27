@@ -11,6 +11,14 @@ Parameters:
     MaxLength: 255
     AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
 
+  IsExistApplication:
+    Description: Does your application exist?
+    Default: true
+    Type: String
+    AllowedValues: 
+      - true
+      - false
+
   EnvironmentName:
     Description: Environment name, either DEV or QA.
     Type: String
@@ -28,17 +36,17 @@ Parameters:
     MaxLength: 255
     AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
 
-  AppS3Bucket:
-    Description: S3 Bucket containing your application package.
-    Type: String
-    MinLength: 1
-    MaxLength: 255
+  # AppS3Bucket:
+  #   Description: S3 Bucket containing your application package.
+  #   Type: String
+  #   MinLength: 1
+  #   MaxLength: 255
 
-  AppS3Key:
-    Description: S3 Bucket key for your application package
-    Type: String
-    MinLength: 1
-    MaxLength: 255
+  # AppS3Key:
+  #   Description: S3 Bucket key for your application package
+  #   Type: String
+  #   MinLength: 1
+  #   MaxLength: 255
 
   SSLCertificateArn:
     Description: The SSL/TLS certificate ARN
@@ -65,6 +73,7 @@ Parameters:
 
 Conditions:
   QAEnv: !Equals [ !Ref EnvironmentName, QA ]
+  CreateApplication: !Equals [ false, !Ref IsExistApplication]
   TlsEnabled: !Not [ !Equals [ !Ref SSLCertificateArn, "" ] ]
 
 
@@ -87,27 +96,28 @@ Resources:
 
   Application:
     Type: AWS::ElasticBeanstalk::Application
+    Condition: CreateApplication 
     Properties:
       ApplicationName: !Ref ApplicationName
 
-  ApplicationVersion:
-    Type: AWS::ElasticBeanstalk::ApplicationVersion
-    Properties:
-      ApplicationName: !Ref Application
-      SourceBundle:
-        S3Bucket: !Ref AppS3Bucket
-        S3Key: !Ref AppS3Key
+  # ApplicationVersion:
+  #   Type: AWS::ElasticBeanstalk::ApplicationVersion
+  #   Properties:
+  #     ApplicationName: !Ref ApplicationName
+  #     SourceBundle:
+  #       S3Bucket: !Ref AppS3Bucket
+  #       S3Key: !Ref AppS3Key
 
   Environment:
     Type: AWS::ElasticBeanstalk::Environment
     Properties:
       EnvironmentName: !Sub "${ApplicationName}-${EnvironmentName}"
-      ApplicationName: !Ref Application
+      ApplicationName: !Ref ApplicationName
       TemplateName: !Ref ConfigurationTemplate
-      VersionLabel: !Ref ApplicationVersion
+      # VersionLabel: !Ref ApplicationVersion
     DependsOn:
       - ConfigurationTemplate
-      - ApplicationVersion
+      # - ApplicationVersion
 
   # The configuration template contains environment parameters such as those
   # that relate to the autoscaling group (e.g. size, triggers), placement of
@@ -115,7 +125,7 @@ Resources:
   ConfigurationTemplate:
     Type: AWS::ElasticBeanstalk::ConfigurationTemplate
     Properties:
-      ApplicationName: !Ref Application
+      ApplicationName: !Ref ApplicationName
       SolutionStackName: 64bit Windows Server 2016 v2.0.4 running IIS 10.0
       OptionSettings:
       - Namespace: aws:elasticbeanstalk:environment
