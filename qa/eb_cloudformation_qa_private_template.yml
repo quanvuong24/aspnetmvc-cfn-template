@@ -20,13 +20,14 @@ Parameters:
       - false
 
   EnvironmentName:
-    Description: Environment name, either DEV or QA.
+    Description: Environment name, either DEV or QA/UAT.
     Type: String
     MinLength: 1
     MaxLength: 255
     AllowedValues:
       - QA
       - DEV
+      - UAT
     ConstraintDescription: Specify either DEV or QA
   
   NetworkStackName:
@@ -72,7 +73,7 @@ Parameters:
     ConstraintDescription: Specify a number between 1 - 4
 
 Conditions:
-  QAEnv: !Equals [ !Ref EnvironmentName, QA ]
+  DEVEnv: !Equals [ !Ref EnvironmentName, DEV ]
   CreateApplication: !Equals [ false, !Ref IsExistApplication]
   TlsEnabled: !Not [ !Equals [ !Ref SSLCertificateArn, "" ] ]
 
@@ -151,7 +152,7 @@ Resources:
           Fn::ImportValue: !Sub "${NetworkStackName}-AppSecurityGroupID"
       - Namespace: aws:autoscaling:launchconfiguration
         OptionName: InstanceType
-        Value: !If [ QAEnv, m5.large, t3.medium ]
+        Value: !If [ DEVEnv, t3.medium, m5.large ]
       - Namespace: aws:autoscaling:launchconfiguration
         OptionName: IamInstanceProfile
         Value: !Ref AppInstanceProfile
@@ -302,6 +303,13 @@ Outputs:
     Value: !Ref AWS::StackName
     Export:
       Name: !Sub ${AWS::StackName}-Name
+
+  ApplicationName:
+    Description: Application Name
+    Condition: CreateApplication 
+    Value: !Sub "${ApplicationName}"
+    Export:
+      Name: !Sub "${AWS::StackName}-ApplicationName"
 
   EnvironmentName:
     Description: Environment Name

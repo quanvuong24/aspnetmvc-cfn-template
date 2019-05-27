@@ -333,6 +333,13 @@ Resources:
       VpcId: !Ref VPC
 
 Outputs:
+
+  Name:
+    Description: VPC Stack Name
+    Value: !Ref AWS::StackName
+    Export:
+      Name: !Sub ${AWS::StackName}-Name
+
   VPC:
     Description: A reference to the created VPC
     Value: !Ref VPC
