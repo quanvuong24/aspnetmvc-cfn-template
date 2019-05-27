@@ -28,7 +28,6 @@ Parameters:
     Default: QA
     AllowedValues:
       - QA
-      - DEV
       - UAT
     ConstraintDescription: Specify either dev or prod
 
@@ -116,6 +115,41 @@ Parameters:
     MaxValue: 4
     Default: 4
     ConstraintDescription: Specify a number between 1 - 20
+  
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 192.168.0.0/17
+  
+  PublicSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 192.168.1.0/26
+
+  PublicSubnet2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
+    Type: String
+    Default: 192.168.1.64/26
+  
+  PrivateSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
+    Type: String
+    Default: 192.168.0.0/26
+
+  PrivateSubnet2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
+    Type: String
+    Default: 192.168.0.64/26
+
+  PrivateSubnet3CIDR:
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the third Availability Zone
+    Type: String
+    Default: 192.168.0.128/26
+
+  PrivateSubnet4CIDR:
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the fourth Availability Zone
+    Type: String
+    Default: 192.168.0.192/26
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -139,6 +173,16 @@ Metadata:
           default: Load Balancer
         Parameters:
           - ELBIngressPort
+      - Label:
+          default: VPC
+        Parameters:
+          - VpcCIDR
+          - PublicSubnet1CIDR
+          - PublicSubnet2CIDR
+          - PrivateSubnet1CIDR
+          - PrivateSubnet2CIDR
+          - PrivateSubnet3CIDR
+          - PrivateSubnet4CIDR
     
     ParameterLabels:
       ELBIngressPort:
@@ -157,6 +201,20 @@ Metadata:
         default: Min Instances
       AutoScalingMaxInstanceCount:
         default: Max Instances
+      VpcCIDR:
+        default: VPC CIDR
+      PublicSubnet1CIDR:
+        default: Public Subnet 1 CIDR
+      PublicSubnet2CIDR:
+        default: Public Subnet 2 CIDR
+      PrivateSubnet1CIDR:
+        default: Private Subnet 1 CIDR
+      PrivateSubnet2CIDR:
+        default: Private Subnet 2 CIDR
+      PrivateSubnet3CIDR:
+        default: Private Subnet 3 CIDR
+      PrivateSubnet4CIDR:
+        default: Private Subnet 4 CIDR
 
 Resources:
 
@@ -168,6 +226,13 @@ Resources:
         EnvironmentName: !Ref EnvironmentName
         ELBIngressPort: !Ref ELBIngressPort
         AppIngressPort: !Ref AppIngressPort
+        VpcCIDR: !Ref VpcCIDR
+        PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
+        PublicSubnet2CIDR: !Ref PublicSubnet2CIDR
+        PrivateSubnet1CIDR: !Ref PrivateSubnet1CIDR
+        PrivateSubnet2CIDR: !Ref PrivateSubnet2CIDR
+        PrivateSubnet3CIDR: !Ref PrivateSubnet3CIDR
+        PrivateSubnet4CIDR: !Ref PrivateSubnet4CIDR
 
   ElasticBeanstalkStack:
     Type: AWS::CloudFormation::Stack
