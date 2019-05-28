@@ -187,8 +187,6 @@ Resources:
           - ','
           - - !ImportValue
                 "Fn::Sub": "${NetworkStackName}-PublicSubnet1ID"
-            - !ImportValue
-                "Fn::Sub": "${NetworkStackName}-PublicSubnet2ID"
 
       - Namespace: aws:elb:loadbalancer
         OptionName: SecurityGroups

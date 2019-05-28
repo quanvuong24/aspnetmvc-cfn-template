@@ -218,7 +218,6 @@ Resources:
         AutoScalingMinInstanceCount: !Ref AutoScalingMinInstanceCount
         AutoScalingMaxInstanceCount: !Ref AutoScalingMaxInstanceCount
 
-
 Outputs:
 
   VpcStackName:
