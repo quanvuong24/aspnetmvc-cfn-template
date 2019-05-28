@@ -1,4 +1,4 @@
-Description: This template deployed QA env with new vpc as template and ASP.NET mvc sample application with Elastic Beanstalk in qa folder
+Description: This template deployed DEV env with new vpc as template and ASP.NET mvc sample application with Elastic Beanstalk in dev folder
 
 Parameters:
 
@@ -24,12 +24,11 @@ Parameters:
 
   EnvironmentName:
     Type: String
-    Description: Environment name - QA/UAT
-    Default: QA
+    Description: Environment name DEV
+    Default: DEV
     AllowedValues:
-      - QA
-      - UAT
-    ConstraintDescription: Specify either qa/uat
+      - DEV
+    ConstraintDescription: Specify DEV only 
 
   # SSHFrom:
   #   Description: Limit SSH access to bastion hosts to a CIDR IP block
@@ -105,7 +104,7 @@ Parameters:
     Type: Number
     MinValue: 1
     MaxValue: 4
-    Default: 2
+    Default: 1
     ConstraintDescription: Specify a number between 1 - 20
 
   AutoScalingMaxInstanceCount:
@@ -126,11 +125,6 @@ Parameters:
     Type: String
     Default: 192.168.1.0/26
 
-  PublicSubnet2CIDR:
-    Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
-    Type: String
-    Default: 192.168.1.64/26
-  
   PrivateSubnet1CIDR:
     Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
     Type: String
@@ -140,16 +134,6 @@ Parameters:
     Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
     Type: String
     Default: 192.168.0.64/26
-
-  PrivateSubnet3CIDR:
-    Description: Please enter the IP range (CIDR notation) for the private subnet in the third Availability Zone
-    Type: String
-    Default: 192.168.0.128/26
-
-  PrivateSubnet4CIDR:
-    Description: Please enter the IP range (CIDR notation) for the private subnet in the fourth Availability Zone
-    Type: String
-    Default: 192.168.0.192/26
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -178,11 +162,8 @@ Metadata:
         Parameters:
           - VpcCIDR
           - PublicSubnet1CIDR
-          - PublicSubnet2CIDR
           - PrivateSubnet1CIDR
           - PrivateSubnet2CIDR
-          - PrivateSubnet3CIDR
-          - PrivateSubnet4CIDR
     
     ParameterLabels:
       ELBIngressPort:
@@ -205,39 +186,30 @@ Metadata:
         default: VPC CIDR
       PublicSubnet1CIDR:
         default: Public Subnet 1 CIDR
-      PublicSubnet2CIDR:
-        default: Public Subnet 2 CIDR
       PrivateSubnet1CIDR:
         default: Private Subnet 1 CIDR
       PrivateSubnet2CIDR:
         default: Private Subnet 2 CIDR
-      PrivateSubnet3CIDR:
-        default: Private Subnet 3 CIDR
-      PrivateSubnet4CIDR:
-        default: Private Subnet 4 CIDR
 
 Resources:
 
   VpcStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/qa/vpc_cloudformation_qa_private_template.yml
+      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/dev/vpc_cloudformation_dev_private_template.yml
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         ELBIngressPort: !Ref ELBIngressPort
         AppIngressPort: !Ref AppIngressPort
         VpcCIDR: !Ref VpcCIDR
         PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
-        PublicSubnet2CIDR: !Ref PublicSubnet2CIDR
         PrivateSubnet1CIDR: !Ref PrivateSubnet1CIDR
         PrivateSubnet2CIDR: !Ref PrivateSubnet2CIDR
-        PrivateSubnet3CIDR: !Ref PrivateSubnet3CIDR
-        PrivateSubnet4CIDR: !Ref PrivateSubnet4CIDR
 
   ElasticBeanstalkStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/qa/eb_cloudformation_qa_private_template.yml
+      TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/dev/eb_cloudformation_dev_private_template.yml
       Parameters:
         ApplicationName: !Ref ApplicationName
         IsExistApplication: !Ref IsExistApplication
