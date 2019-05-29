@@ -26,10 +26,8 @@ Parameters:
     Type: String
     Description: Environment name - QA/UAT
     Default: QA
-    AllowedValues:
-      - QA
-      - UAT
-    ConstraintDescription: Specify either qa/uat
+    MinLength: 1
+    MaxLength: 255
 
   # SSHFrom:
   #   Description: Limit SSH access to bastion hosts to a CIDR IP block

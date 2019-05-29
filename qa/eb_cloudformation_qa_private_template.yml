@@ -20,14 +20,11 @@ Parameters:
       - false
 
   EnvironmentName:
-    Description: Environment name, either DEV or QA/UAT.
+    Description: Environment name - QA/UAT.
     Type: String
     MinLength: 1
     MaxLength: 255
-    AllowedValues:
-      - QA
-      - UAT
-    ConstraintDescription: Specify either DEV or QA
+    Default: QA
   
   NetworkStackName:
     Description: Name of an active CloudFormation stack of networking resources
