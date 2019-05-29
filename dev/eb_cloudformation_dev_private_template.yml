@@ -24,9 +24,7 @@ Parameters:
     Type: String
     MinLength: 1
     MaxLength: 255
-    AllowedValues:
-      - DEV
-    ConstraintDescription: Specify DEV only
+    Default: DEV
   
   NetworkStackName:
     Description: Name of an active CloudFormation stack of networking resources
@@ -206,13 +204,31 @@ Resources:
         Value: !If [ TlsEnabled, HTTPS, HTTP ]
         # SSLCertificateId: !Ref SSLCertificateArn
 
-      #   # CLOUDWATCH LOGS
-      # - Namespace: aws:elasticbeanstalk:cloudwatch:logs
-      #   OptionName: StreamLogs
-      #   Value: true
-      # - Namespace: aws:elasticbeanstalk:cloudwatch:logs
-      #   OptionName: DeleteOnTerminate
-      #   Value: true
+        # Enable Cloudwatch Health
+      - Namespace: aws:elasticbeanstalk:healthreporting:system
+        OptionName: SystemType
+        Value: enhanced
+
+        # CLOUDWATCH LOGS
+      - Namespace: aws:elasticbeanstalk:cloudwatch:logs
+        OptionName: StreamLogs
+        Value: 'true'
+
+      - Namespace: aws:elasticbeanstalk:cloudwatch:logs
+        OptionName: DeleteOnTerminate
+        Value: 'true'
+
+      - Namespace: aws:elasticbeanstalk:cloudwatch:logs
+        OptionName: RetentionInDays
+        Value: 180
+
+      - Namespace: aws:elasticbeanstalk:cloudwatch:logs:health
+        OptionName: HealthStreamingEnabled
+        Value: 'true'
+
+      - Namespace: aws:elasticbeanstalk:cloudwatch:logs:health
+        OptionName: RetentionInDays
+        Value: 180
 
       # ENVIRONMENT VARIABLES - COMMON TO ALL STACKS
       - Namespace: aws:elasticbeanstalk:application:environment
