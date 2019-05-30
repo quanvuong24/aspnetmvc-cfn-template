@@ -221,14 +221,33 @@ Resources:
             "Fn::ImportValue": !Sub "${NetworkStackName}-ELBIngressPort"
         OptionName: SSLCertificateArns
         Value: !Ref SSLCertificateArn
+        
+        # Enable Cloudwatch Health
+      - Namespace: aws:elasticbeanstalk:healthreporting:system
+        OptionName: SystemType
+        Value: enhanced
 
-      #   # CLOUDWATCH LOGS
-      # - Namespace: aws:elasticbeanstalk:cloudwatch:logs
-      #   OptionName: StreamLogs
-      #   Value: true
-      # - Namespace: aws:elasticbeanstalk:cloudwatch:logs
-      #   OptionName: DeleteOnTerminate
-      #   Value: true
+        # CLOUDWATCH LOGS
+      - Namespace: aws:elasticbeanstalk:cloudwatch:logs
+        OptionName: StreamLogs
+        Value: 'true'
+
+      - Namespace: aws:elasticbeanstalk:cloudwatch:logs
+        OptionName: DeleteOnTerminate
+        Value: 'true'
+
+      - Namespace: aws:elasticbeanstalk:cloudwatch:logs
+        OptionName: RetentionInDays
+        Value: 180
+
+      - Namespace: aws:elasticbeanstalk:cloudwatch:logs:health
+        OptionName: HealthStreamingEnabled
+        Value: 'true'
+
+      - Namespace: aws:elasticbeanstalk:cloudwatch:logs:health
+        OptionName: RetentionInDays
+        Value: 180
+
 
       # ENVIRONMENT VARIABLES - COMMON TO ALL STACKS
       - Namespace: aws:elasticbeanstalk:application:environment
