@@ -175,8 +175,6 @@ Resources:
           - ','
           - - !ImportValue
                 "Fn::Sub": "${NetworkStackName}-PrivateSubnet1ID"
-            - !ImportValue
-                "Fn::Sub": "${NetworkStackName}-PrivateSubnet2ID"
 
       - Namespace: aws:ec2:vpc
         OptionName: ELBSubnets
@@ -229,6 +227,11 @@ Resources:
       - Namespace: aws:elasticbeanstalk:cloudwatch:logs:health
         OptionName: RetentionInDays
         Value: 180
+
+      # Publish rotated log to S3
+      - Namespace: aws:elasticbeanstalk:hostmanager
+        OptionName: LogPublicationControl
+        Value: 'true'
 
       # ENVIRONMENT VARIABLES - COMMON TO ALL STACKS
       - Namespace: aws:elasticbeanstalk:application:environment
