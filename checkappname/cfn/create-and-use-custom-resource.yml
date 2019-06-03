@@ -15,15 +15,15 @@ Parameters:
   ModuleName:
     Description: The name of the Python file
     Type: String
-    Default: customresource
+    Default: checkebappexist
   S3Bucket:
     Description: The name of the bucket that contains your packaged source
     Type: String
-    Default: eb-checkappname
+    Default: aspnetmvc-cfn
   S3Key:
     Description: The name of the ZIP package
     Type: String
-    Default: checkappname.zip
+    Default: checkappname/lambda/checkappname.zip
 Resources:
   CustomFunction:
     Type: AWS::Lambda::Function
@@ -62,7 +62,9 @@ Resources:
               - Effect: Allow
                 Action:
                   - ec2:DescribeImages
+                  - elasticbeanstalk:*
                 Resource: '*'
+                
   # CustomResource:
   #   Type: Custom::CustomResource
   #   Properties:
