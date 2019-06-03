@@ -14,13 +14,13 @@ Parameters:
     MaxLength: 255
     AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
 
-  IsExistApplication:
-    Description: Does your application exist?
-    Default: true
-    Type: String
-    AllowedValues: 
-      - true
-      - false
+  # IsExistApplication:
+  #   Description: Does your application exist?
+  #   Default: true
+  #   Type: String
+  #   AllowedValues: 
+  #     - true
+  #     - false
 
   EnvironmentName:
     Type: String
@@ -192,6 +192,13 @@ Metadata:
 
 Resources:
 
+  CustomResource:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: 
+        Fn::ImportValue: !Sub "checkapp-lambda-arn"
+      NameFilter: !Ref ApplicationName
+
   VpcStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -211,7 +218,7 @@ Resources:
       TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/dev/eb_cloudformation_dev_private_template.yml
       Parameters:
         ApplicationName: !Ref ApplicationName
-        IsExistApplication: !Ref IsExistApplication
+        IsExistApplication: !GetAtt CustomResource.AppExist
         EnvironmentName: !Ref EnvironmentName
         NetworkStackName: !GetAtt VpcStack.Outputs.Name
         AutoScalingMinInstanceCount: !Ref AutoScalingMinInstanceCount
