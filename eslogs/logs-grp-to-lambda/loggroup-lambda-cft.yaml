@@ -1,0 +1,136 @@
+Description: This template deployed to integrate between log group with defined pattern stream logs to elasticsearch lambda function 
+
+Parameters:
+  UseExistingLogs:
+    Default: 'false'
+    Type: String
+    Description: Select true for subscribing existing logs
+    AllowedValues:
+      - 'true'
+      - 'false'
+  # LambdaARN:
+  #   Default: 'arn:aws:lambda:us-east-1:123456789000:function:TestLambda'
+  #   Type: String
+  #   Description: Enter ARN for target lambda function
+  LogGroupPattern:
+    Default: Test
+    Type: String
+    Description: Enter regex for matching logGroups
+
+
+Mappings:
+  RegionMap:
+    ap-southeast-1:
+      bucketname: aspnetmvc-lambda
+
+Resources:
+  EsLogGroupLambdaConnector:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        S3Bucket: !FindInMap 
+          - RegionMap
+          - !Ref 'AWS::Region'
+          - bucketname
+        S3Key: LogsToElasticsearch_aspnetmvc.zip
+      Tags:
+        - Value: SAM
+          Key: 'lambda:createdBy'
+      MemorySize: 128
+      Environment:
+        Variables:
+          LOG_GROUP_PATTERN: !Ref LogGroupPattern
+          USE_EXISTING_LOG_GROUPS: !Ref UseExistingLogs
+          LAMBDA_ARN: !GetAtt EsGroupLambdaConnector.Arn
+      Handler: loggroup-lambda-connector.handler
+      Role: !GetAtt 
+        - EsLogGroupLambdaConnectorRole
+        - Arn
+      Timeout: 300
+      Runtime: nodejs8.10
+  EsLogGroupLambdaConnectorRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: !Join 
+            - '-'
+            - - EsLogGroupLambdaConnectorPolicy
+              - !Select 
+                - '2'
+                - !Split 
+                  - /
+                  - !Ref 'AWS::StackId'
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - 'logs:DescribeLogGroups'
+                  - 'logs:DescribeLogStreams'
+                  - 'logs:PutSubscriptionFilter'
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                Effect: Allow
+                Sid: ReadWriteFilterPolicy
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+  EsCWLambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      SourceAccount: !Ref 'AWS::AccountId'
+      Principal: !Sub 'logs.${AWS::Region}.amazonaws.com'
+      FunctionName: !Ref LambdaARN
+      SourceArn: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:*'
+  EsLogGroupLambdaConnectorLambdaTrigger:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      EventPattern:
+        source:
+          - aws.logs
+        detail:
+          eventName:
+            - CreateLogGroup
+          eventSource:
+            - logs.amazonaws.com
+      Targets:
+        - Id: EsLogGroupLambdaConnectorLambdaTriggerLambdaTarget
+          Arn: !GetAtt 
+            - EsLogGroupLambdaConnector
+            - Arn
+  EsLogGroupLambdaConnectorLambdaTriggerPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:invokeFunction'
+      Principal: events.amazonaws.com
+      FunctionName: !Ref EsLogGroupLambdaConnector
+      SourceArn: !GetAtt 
+        - EsLogGroupLambdaConnectorLambdaTrigger
+        - Arn
+Description: >
+  "Lambda Function for automatic subscription of any ElasticSearch lambda function
+  with loggroups matching an input pattern."
+
+
+Outputs:
+  EsLogGroupLambdaConnector:
+    Description: EsLogGroupLambdaConnector Function ARN
+    Value: !GetAtt 
+      - EsLogGroupLambdaConnector
+      - Arn
+    Export:
+      Name: !Join 
+        - '-'
+        - - EsLogGroupLambdaConnectorArn
+          - !Select 
+            - '2'
+            - !Split 
+              - /
+              - !Ref 'AWS::StackId'

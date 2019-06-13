@@ -1,0 +1,102 @@
+Description: |
+  LogManager: v0.1.0 -
+  CloudWatch Logs, Elasticsearch, Kibana
+
+Parameters:
+  ElasticsearchDomainName:
+    Type: String
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+    Description: Name of Elasticsearch domain for log [a-z][a-z0-9]*
+
+  DataInstanceType:
+    Description: The instance type for ElasticSearch Data Node
+    Type: String
+    Default: m5.large.elasticsearch
+    ConstraintDescription: Instance type not supported
+    AllowedValues:
+      - m5.large.elasticsearch
+      - t2.medium.elasticsearch
+
+  MasterInstanceType:
+    Description: The instance type for ElasticSearch Master Node
+    Type: String
+    Default: m5.large.elasticsearch
+    ConstraintDescription: Instance type not supported
+    AllowedValues:
+      - t2.medium.elasticsearch
+      - m5.large.elasticsearch
+
+  MultiAZsEnable:
+    Description: Enable Multi AZs for HA
+    Default: true
+    Type: String
+    AllowedValues: 
+      - true
+      - false
+
+  DataVolumeSize:
+    Description: Set number of data node storage
+    Default: 30
+    Type: String
+
+  DataVolumeType:
+    Description: Set type of data node storage
+    Default: gp2
+    Type: String
+    AllowedValues: 
+      - gp2
+      - io1
+
+  CognitoStackName:
+    Description: Name of a Cognito stack
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+
+
+Resources:
+  ElasticsearchDomain: 
+    Type: AWS::Elasticsearch::Domain
+    Properties:
+      DomainName: !Ref ElasticsearchDomainName
+      ElasticsearchVersion: "6.7"
+      ElasticsearchClusterConfig: 
+        DedicatedMasterEnabled: "true"
+        InstanceCount: "2"
+        ZoneAwarenessEnabled: !Ref MultiAzsEnable
+        InstanceType: !Ref DataInstanceType
+        DedicatedMasterType: !Ref MasterInstanceType
+        DedicatedMasterCount: "3"
+      EBSOptions: 
+        EBSEnabled: true
+        Iops: 0
+        VolumeSize: !Ref DataVolumeSize
+        VolumeType: !Ref DataVolumeType
+      SnapshotOptions: 
+        AutomatedSnapshotStartHour: 0
+      AccessPolicies: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Principal:
+              # AWS: !Sub "arn:aws:iam::${AWS::AccountId}:user/quanvuong"
+              AWS: !Join
+                - ""
+                - - !Sub "arn:aws:sts::${AWS::AccountId}:assumed-role/Cognito_"
+                  - Fn::ImportValue: !Sub "${CognitoStackName}-UserPool"
+                  - "Auth_Role/CognitoIdentityCredentials"
+            Action: "es:*"
+            Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchDomainName}/*"
+      AdvancedOptions: 
+        rest.action.multi.allow_explicit_index: "true"
+
+Outputs:
+  DomainArn:
+    Value: !GetAtt ElasticsearchDomain.DomainArn
+    Export: 
+      Name: !Sub ${AWS::StackName}-DomainArn
+  DomainEndpoint:
+    Value: !GetAtt ElasticsearchDomain.DomainEndpoint
+    Export: 
+      Name: !Sub ${AWS::StackName}-DomainEndpoint
