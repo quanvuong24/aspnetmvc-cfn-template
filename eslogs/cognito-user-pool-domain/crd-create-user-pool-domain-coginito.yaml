@@ -1,0 +1,112 @@
+Description: "This template create a lambda custom resource to create/update/delete user pool domain name which need to kibana access with users"
+
+Parameters:
+
+  UserPoolDomainName:
+    Description: Domain name of user pool
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+    Default: "aspnetmvc-kibana"
+
+  CognitoStackName:
+    Description: Name of a Cognito stack
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+    Default: "aspnetmvc-cognito"
+
+  S3Bucket:
+    Description: The name of the bucket that contains your packaged source
+    Type: String
+    Default: aspnetmvc-cfn
+
+  S3Key:
+    Description: The name of the ZIP package
+    Type: String
+    Default: eslogs/cognito-user-pool-domain/CognitoUserPoolDomain.zip
+
+
+Resources:
+
+  LambdaForCloudFormation:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: LambdaForCloudFormation
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service: lambda.amazonaws.com
+      Policies:
+        -
+          PolicyName: WriteCloudWatchLogs
+          PolicyDocument: 
+            Version: '2012-10-17'
+            Statement: 
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+        -
+          PolicyName: UpdateUserPoolClient
+          PolicyDocument: 
+            Version: '2012-10-17'
+            Statement: 
+              -
+                Effect: Allow
+                Action: 'cognito-idp:UpdateUserPoolClient'
+                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+        -
+          PolicyName: ManageUserPoolDomain
+          PolicyDocument: 
+            Version: '2012-10-17'
+            Statement: 
+              -
+                Effect: Allow
+                Action: 'cognito-idp:CreateUserPoolDomain'
+                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+              -
+                Effect: Allow
+                Action: 'cognito-idp:DeleteUserPoolDomain'
+                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+              -
+                Effect: Allow
+                Action: 'cognito-idp:DescribeUserPoolDomain'
+                Resource: '*'
+        -
+          PolicyName: InvokeLambdaFunction
+          PolicyDocument: 
+            Version: '2012-10-17'
+            Statement: 
+              -
+                Effect: Allow
+                Action: 'lambda:InvokeFunction'
+                Resource: 'arn:aws:lambda:*:*:function:*'
+
+  CognitoUserPoolDomain:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: CognitoUserPoolDomain
+      Runtime: nodejs8.10
+      Code:
+        S3Bucket: !Ref 'S3Bucket'
+        S3Key: !Ref 'S3Key'
+      Handler: CognitoUserPoolDomain.handler
+      Role: !GetAtt LambdaForCloudFormation.Arn
+  
+  UserPoolTestDomain:
+    Type: 'Custom::CognitoUserPoolDomain'
+    Properties:
+      ServiceToken: !GetAtt CognitoUserPoolDomain.Arn
+      UserPoolId: 
+        Fn::ImportValue: !Sub "${CognitoStackName}-UserPoolId"
+      Domain: !Ref UserPoolDomainName

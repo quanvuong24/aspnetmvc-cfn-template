@@ -64,7 +64,7 @@ Resources:
       ElasticsearchClusterConfig: 
         DedicatedMasterEnabled: "true"
         InstanceCount: "2"
-        ZoneAwarenessEnabled: !Ref MultiAzsEnable
+        ZoneAwarenessEnabled: !Ref MultiAZsEnable
         InstanceType: !Ref DataInstanceType
         DedicatedMasterType: !Ref MasterInstanceType
         DedicatedMasterCount: "3"
@@ -84,7 +84,7 @@ Resources:
               AWS: !Join
                 - ""
                 - - !Sub "arn:aws:sts::${AWS::AccountId}:assumed-role/Cognito_"
-                  - Fn::ImportValue: !Sub "${CognitoStackName}-UserPool"
+                  - Fn::ImportValue: !Sub "${CognitoStackName}-IdentityPool"
                   - "Auth_Role/CognitoIdentityCredentials"
             Action: "es:*"
             Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchDomainName}/*"

@@ -60,7 +60,7 @@ Resources:
               - mobileanalytics:PutEvents
               - cognito-sync:*
               - cognito-identity:*
-              # - "es:ESHttp*"
+              - es:ESHttp*
             Resource:
               - "*"
   
@@ -74,7 +74,7 @@ Resources:
             Action:
               - mobileanalytics:PutEvents
               - cognito-sync:*
-              # - "es:ESHttp*"
+              - es:ESHttp*
             Resource:
               - "*"
               
@@ -135,11 +135,19 @@ Outputs:
     Value: !Ref UserPoolName
     Export:
       Name: !Sub "${AWS::StackName}-UserPool"
+  UserPoolId:
+    Value: !Ref UserPool
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolId"
   UserPoolArn:
     Value: !GetAtt UserPool.Arn
     Export:
       Name: !Sub "${AWS::StackName}-UserPoolArn"
+  IdentityPool:
+    Value: !Ref IdentityPoolName
+    Export:
+      Name: !Sub "${AWS::StackName}-IdentityPool"
   IdentityPoolId:
     Value: !Ref IdentityPool
     Export:
-      Name: !Sub "${AWS::StackName}-IdentityPool"
+      Name: !Sub "${AWS::StackName}-IdentityPoolId"
