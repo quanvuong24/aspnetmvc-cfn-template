@@ -67,11 +67,11 @@ Resources:
           - Effect: Allow
             Action:
             - es:UpdateElasticsearchDomainConfig
-            Resource: !Join
+            Resource: 
+              Fn::Join:
                 - ""
                 - - !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/"
                   - Fn::ImportValue: !Sub "${ESStackName}-DomainName"
-                  - "/*"
           - Effect: Allow
             Action:
             - cognito-idp:CreateUserPoolDomain
