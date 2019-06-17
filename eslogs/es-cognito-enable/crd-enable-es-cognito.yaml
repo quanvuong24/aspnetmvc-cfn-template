@@ -2,7 +2,6 @@ Description: "This template create a lambda custom resource to enable cognito in
 
 Parameters:
 
-  Parameters:
   ESStackName:
     Description: Name of a Elasticsearch stack
     Type: String
@@ -39,7 +38,6 @@ Resources:
 
   LambdaESCognitoRole:
     Type: AWS::IAM::Role
-    DependsOn: ElasticsearchAWSLogs
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -73,7 +71,8 @@ Resources:
             Action:
             - cognito-idp:CreateUserPoolDomain
             - cognito-idp:DeleteUserPoolDomain
-            Resource: !GetAtt UserPool.Arn
+            Resource: 
+              Fn::ImportValue: !Sub ${CognitoStackName}-UserPoolArn
           - Effect: Allow
             Action:
             - iam:PassRole

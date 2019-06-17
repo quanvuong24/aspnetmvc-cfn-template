@@ -125,6 +125,9 @@ Resources:
 
 Outputs:
   CognitoDomainName:
-    Value: !Join ["", !Ref UserPoolDomainName, !Sub ".auth.${AWS::Region}.amazoncognito.com"]
+    Value: !Join 
+      - ""
+      - - !Ref UserPoolDomainName
+        - !Sub ".auth.${AWS::Region}.amazoncognito.com"
     Export: 
       Name: !Sub ${AWS::StackName}-DomainName
