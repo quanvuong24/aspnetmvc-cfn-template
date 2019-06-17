@@ -92,6 +92,11 @@ Resources:
         rest.action.multi.allow_explicit_index: "true"
 
 Outputs:
+  Name:
+    Description: ES Stack Name
+    Value: !Ref AWS::StackName
+    Export:
+      Name: !Sub ${AWS::StackName}-Name
   DomainName:
     Value: !Ref ElasticsearchDomainName
     Export: 

@@ -131,6 +131,11 @@ Resources:
         unauthenticated: !GetAtt UnAuthenticatedRole.Arn
         
 Outputs:
+  Name:
+    Description: Cognito Stack Name
+    Value: !Ref AWS::StackName
+    Export:
+      Name: !Sub ${AWS::StackName}-Name
   UserPool:
     Value: !Ref UserPoolName
     Export:

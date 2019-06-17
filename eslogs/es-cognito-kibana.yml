@@ -1,0 +1,212 @@
+Description: This template deployed ES + KIBANA + COGNITO to centralize logging from CloudWatch Logs
+Parameters:
+
+  # Setup ES
+  ElasticsearchDomainName:
+    Type: String
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+    Description: Name of Elasticsearch domain for log [a-z][a-z0-9]*
+
+  DataInstanceType:
+    Description: The instance type for ElasticSearch Data Node
+    Type: String
+    Default: m5.large.elasticsearch
+    ConstraintDescription: Instance type not supported
+    AllowedValues:
+      - m5.large.elasticsearch
+      - t2.medium.elasticsearch
+
+  MasterInstanceType:
+    Description: The instance type for ElasticSearch Master Node
+    Type: String
+    Default: m5.large.elasticsearch
+    ConstraintDescription: Instance type not supported
+    AllowedValues:
+      - t2.medium.elasticsearch
+      - m5.large.elasticsearch
+
+  MultiAZsEnable:
+    Description: Enable Multi AZs for HA
+    Default: true
+    Type: String
+    AllowedValues: 
+      - true
+      - false
+
+  DataVolumeSize:
+    Description: Set number of data node storage
+    Default: 30
+    Type: String
+
+  DataVolumeType:
+    Description: Set type of data node storage
+    Default: gp2
+    Type: String
+    AllowedValues: 
+      - gp2
+      - io1
+
+  CognitoStackName:
+    Description: Name of a Cognito stack
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+
+  # Setup Cognito 
+  UserPoolName:
+    Type: String
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+    Description: Name of user pool in Cognito
+    Default: "KibanaUsers"
+  
+  IdentityPoolName:
+    Type: String
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+    Description: Name of identity pool in Cognito
+    Default: "KibanaIDPool"
+
+  # ES Cognito Enable
+  ESStackName:
+    Description: Name of a Elasticsearch stack
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+    Default: aspnetmvc-eslogs
+
+  CognitoStackName:
+    Description: Name of a Cognito stack
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+    Default: aspnetmvc-cognito
+  
+  UserPoolDomainName:
+    Description: User Pool Domain Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+    Default: aspnetmvc-kibana
+
+  S3Bucket:
+    Description: The name of the bucket that contains your packaged source
+    Type: String
+    Default: aspnetmvc-cfn
+
+  S3Key:
+    Description: The name of the ZIP package
+    Type: String
+    Default: eslogs/es-cognito-enable/es-cognito-enable.zip
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: ElasticSearch
+        Parameters:
+          - ElasticsearchDomainName
+          - DataInstanceType
+          - MasterInstanceType
+          - MultiAZsEnable
+          - DataVolumeSize
+          - DataVolumeType
+      - Label:
+          default: Cognito
+        Parameters:
+          - UserPoolName
+          - IdentityPoolName
+      - Label:
+          default: Enable Cognito in ES
+        Parameters:
+          - ESStackName
+          - CognitoStackName
+          - UserPoolDomainName
+          - S3Bucket
+          - S3Key
+    
+    ParameterLabels:
+      ElasticsearchDomainName:
+        default: Name
+      DataInstanceType:
+        default: Instance Type
+      MasterInstanceType:
+        default: Instance Type
+      MultiAZsEnable:
+        default: Boolean
+      DataVolumeSize:
+        default: GB
+      DataVolumeType:
+        default: SSD, IO
+      CognitoStackName:
+        default: Name of Cognito Stack
+      UserPoolName:
+        default: Name of User Pool in Cognito
+      IdentityPoolName:
+        default: Name of Identity Pool in Cognito
+      ESStackName:
+        default: Name of Elasticsearch Stack
+      UserPoolDomainName:
+        default: Domain Name of User Pool in Cognito
+      S3Bucket:
+        default: S3 bucket stores app code
+      S3Key:
+        default: PATH to app code in S3 bucket
+
+Resources:
+
+  ES:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://aspnetmvc-cfn.s3-ap-southeast-1.amazonaws.com/eslogs/es.yaml
+      Parameters:
+          ElasticsearchDomainName: !Ref ElasticsearchDomainName
+          DataInstanceType: !Ref DataInstanceType
+          MasterInstanceType: !Ref MasterInstanceType
+          MultiAZsEnable: !Ref MultiAZsEnable
+          DataVolumeSize: !Ref DataVolumeSize
+          DataVolumeType: !Ref DataVolumeType
+          CognitoStackName: !Ref CognitoStackName
+
+  Cognito:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://aspnetmvc-cfn.s3-ap-southeast-1.amazonaws.com/eslogs/cognito.yaml
+      Parameters:
+        UserPoolName: !Ref UserPoolName
+        IdentityPoolName: !Ref IdentityPoolName
+
+  ESCognito:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+    - ES
+    - Cognito
+    Properties:
+      TemplateURL: !Sub https://aspnetmvc-cfn.s3-ap-southeast-1.amazonaws.com/eslogs/es-cognito-enable/crd-enable-es-cognito.yaml
+      Parameters:
+          ESStackName: !GetAtt ES.Outputs.Name
+          CognitoStackName: !GetAtt Cognito.Outputs.Name
+          UserPoolDomainName: !Ref UserPoolDomainName
+          S3Bucket: !Ref S3Bucket
+          S3Key: !Ref S3Key
+
+
+Outputs:
+
+  ESStackStackName:
+    Value: !GetAtt ESStack.Outputs.Name
+    Export:
+      Name: !Sub ${AWS::StackName}-ES
+
+  CognitoStackName:
+    Value: !GetAtt Cognito.Outputs.Name
+    Export:
+      Name: !Sub ${AWS::StackName}-Cognito
+
+  ESCognitoStackName:
+    Value: !GetAtt ESCognito.Outputs.Name
+    Export:
+      Name: !Sub ${AWS::StackName}-ESCognito
+
