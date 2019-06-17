@@ -92,16 +92,28 @@ Resources:
                 Action: 'lambda:InvokeFunction'
                 Resource: 'arn:aws:lambda:*:*:function:*'
 
+  CloudFormationSendResponse:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: CloudFormationSendResponse
+      Runtime: nodejs8.10
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: eslogs/cognito-user-pool-domain/CloudFormationSendResponse.zip
+      Handler: index.handler
+      Role: !GetAtt LambdaForCloudFormation.Arn
+  
   CognitoUserPoolDomain:
     Type: 'AWS::Lambda::Function'
     Properties:
       FunctionName: CognitoUserPoolDomain
       Runtime: nodejs8.10
       Code:
-        S3Bucket: !Ref 'S3Bucket'
-        S3Key: !Ref 'S3Key'
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref S3Key
       Handler: CognitoUserPoolDomain.handler
       Role: !GetAtt LambdaForCloudFormation.Arn
+    DependsOn: CloudFormationSendResponse
   
   UserPoolTestDomain:
     Type: 'Custom::CognitoUserPoolDomain'
@@ -110,3 +122,9 @@ Resources:
       UserPoolId: 
         Fn::ImportValue: !Sub "${CognitoStackName}-UserPoolId"
       Domain: !Ref UserPoolDomainName
+
+Outputs:
+  CognitoDomainName:
+    Value: !Join ["", !Ref UserPoolDomainName, !Sub ".auth.${AWS::Region}.amazoncognito.com"]
+    Export: 
+      Name: !Sub ${AWS::StackName}-DomainName

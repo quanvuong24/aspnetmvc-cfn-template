@@ -1,0 +1,125 @@
+Description: "This template create a lambda custom resource to enable cognito in es cluster which not support by CloudFormation yet"
+
+Parameters:
+
+  Parameters:
+  ESStackName:
+    Description: Name of a Elasticsearch stack
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+
+  CognitoStackName:
+    Description: Name of a Cognito stack
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+  
+  CRDCognitoStackName:
+    Description: Name of a custom resource Cognito stack create domain
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+
+  S3Bucket:
+    Description: The name of the bucket that contains your packaged source
+    Type: String
+    Default: aspnetmvc-cfn
+
+  S3Key:
+    Description: The name of the ZIP package
+    Type: String
+    Default: eslogs/es-cognito-enable/es-cognito-enable.zip
+
+
+Resources:
+
+  LambdaESCognitoRole:
+    Type: AWS::IAM::Role
+    DependsOn: ElasticsearchAWSLogs
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - es:UpdateElasticsearchDomainConfig
+            Resource: !Join
+                - ""
+                - - !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/'
+                  - Fn::ImportValue: !Sub ${CRDCognitoStackName}-DomainName
+          - Effect: Allow
+            Action:
+            - cognito-idp:CreateUserPoolDomain
+            - cognito-idp:DeleteUserPoolDomain
+            Resource: !GetAtt UserPool.Arn
+          - Effect: Allow
+            Action:
+            - iam:PassRole
+            Resource: !GetAtt CognitoESAccessRole.Arn
+
+  CognitoESAccessRole:
+    Type: 'AWS::IAM::Role'
+    DeletionPolicy: Retain
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonESCognitoAccess
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service: 'es.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+
+  # Custom resource to configure Cognito and ES
+  SetupESCognito:
+    Type: 'Custom::SetupESCognito'
+    Properties:
+      ServiceToken: !GetAtt LambdaESCognito.Arn
+      Domain: 
+        Fn::ImportValue: !Sub ${ESStackName}-DomainEndpoint
+      CognitoDomain: 
+        Fn::ImportValue: !Sub ${CRDCognitoStackName}-DomainName
+      UserPoolId: 
+        Fn::ImportValue: !Sub ${CognitoStackName}-UserPoolId
+      IdentityPoolId:
+        Fn::ImportValue: !Sub ${CognitoStackName}-IdentityPoolId
+      RoleArn: !GetAtt CognitoESAccessRole.Arn
+
+  LambdaESCognito:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Description: Centralized Logging - Lambda function to enable cognito authentication for kibana
+      Environment:
+        Variables:
+          LOG_LEVEL: 'INFO' #change to WARN, ERROR or DEBUG as needed
+      Handler: index.handler
+      Runtime: nodejs8.10
+      Timeout: 300
+      Role: !GetAtt LambdaESCognitoRole.Arn
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref S3Key
