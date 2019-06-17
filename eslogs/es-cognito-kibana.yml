@@ -196,7 +196,7 @@ Resources:
 Outputs:
 
   ESStackStackName:
-    Value: !GetAtt ESStack.Outputs.Name
+    Value: !GetAtt ES.Outputs.Name
     Export:
       Name: !Sub ${AWS::StackName}-ES
 
