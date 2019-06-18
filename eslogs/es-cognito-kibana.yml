@@ -47,12 +47,12 @@ Parameters:
       - gp2
       - io1
 
-  CognitoStackName:
-    Description: Name of a Cognito stack
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+  # CognitoStackName:
+  #   Description: Name of a Cognito stack
+  #   Type: String
+  #   MinLength: 1
+  #   MaxLength: 255
+  #   AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
 
   # Setup Cognito 
   UserPoolName:
@@ -68,21 +68,21 @@ Parameters:
     Default: "KibanaIDPool"
 
   # ES Cognito Enable
-  ESStackName:
-    Description: Name of a Elasticsearch stack
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
-    Default: aspnetmvc-eslogs
+  # ESStackName:
+  #   Description: Name of a Elasticsearch stack
+  #   Type: String
+  #   MinLength: 1
+  #   MaxLength: 255
+  #   AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+  #   Default: aspnetmvc-eslogs
 
-  CognitoStackName:
-    Description: Name of a Cognito stack
-    Type: String
-    MinLength: 1
-    MaxLength: 255
-    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
-    Default: aspnetmvc-cognito
+  # CognitoStackName:
+  #   Description: Name of a Cognito stack
+  #   Type: String
+  #   MinLength: 1
+  #   MaxLength: 255
+  #   AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+  #   Default: aspnetmvc-cognito
   
   UserPoolDomainName:
     Description: User Pool Domain Name
@@ -139,14 +139,14 @@ Metadata:
         default: GB
       DataVolumeType:
         default: SSD, IO
-      CognitoStackName:
-        default: Name of Cognito Stack
+      # CognitoStackName:
+      #   default: Name of Cognito Stack
       UserPoolName:
         default: Name of User Pool in Cognito
       IdentityPoolName:
         default: Name of Identity Pool in Cognito
-      ESStackName:
-        default: Name of Elasticsearch Stack
+      # ESStackName:
+      #   default: Name of Elasticsearch Stack
       UserPoolDomainName:
         default: Domain Name of User Pool in Cognito
       S3Bucket:

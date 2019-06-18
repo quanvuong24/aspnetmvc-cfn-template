@@ -25,7 +25,7 @@ Resources:
     Properties:
       UserPoolName: !Ref UserPoolName
       AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: true
+        AllowAdminCreateUserOnly: false
       UsernameAttributes:
         - email
       AutoVerifiedAttributes:
