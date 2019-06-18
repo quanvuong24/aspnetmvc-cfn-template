@@ -5,7 +5,8 @@ Parameters:
   ElasticsearchDomainName:
     Type: String
     AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
-    Description: Name of Elasticsearch domain for log [a-z][a-z0-9]*
+    Description: Elasticsearch domain name
+    Default: aspnetmvc-eslogs
 
   DataInstanceType:
     Description: The instance type for ElasticSearch Data Node
@@ -121,8 +122,6 @@ Metadata:
       - Label:
           default: Enable Cognito in ES
         Parameters:
-          - ESStackName
-          - CognitoStackName
           - UserPoolDomainName
           - S3Bucket
           - S3Key
@@ -159,6 +158,7 @@ Resources:
 
   ES:
     Type: AWS::CloudFormation::Stack
+    DependsOn: Cognito
     Properties:
       TemplateURL: !Sub https://aspnetmvc-cfn.s3-ap-southeast-1.amazonaws.com/eslogs/es.yaml
       Parameters:
@@ -168,7 +168,7 @@ Resources:
           MultiAZsEnable: !Ref MultiAZsEnable
           DataVolumeSize: !Ref DataVolumeSize
           DataVolumeType: !Ref DataVolumeType
-          CognitoStackName: !Ref CognitoStackName
+          CognitoStackName: !GetAtt Cognito.Outputs.Name
 
   Cognito:
     Type: AWS::CloudFormation::Stack
@@ -204,9 +204,4 @@ Outputs:
     Value: !GetAtt Cognito.Outputs.Name
     Export:
       Name: !Sub ${AWS::StackName}-Cognito
-
-  ESCognitoStackName:
-    Value: !GetAtt ESCognito.Outputs.Name
-    Export:
-      Name: !Sub ${AWS::StackName}-ESCognito
 

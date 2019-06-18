@@ -6,7 +6,7 @@ Parameters:
   ElasticsearchDomainName:
     Type: String
     AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
-    Description: Name of Elasticsearch domain for log [a-z][a-z0-9]*
+    Description: Elasticsearch domain name
 
   DataInstanceType:
     Description: The instance type for ElasticSearch Data Node
@@ -92,19 +92,23 @@ Resources:
         rest.action.multi.allow_explicit_index: "true"
 
 Outputs:
+  
   Name:
     Description: ES Stack Name
     Value: !Ref AWS::StackName
     Export:
       Name: !Sub ${AWS::StackName}-Name
+      
   DomainName:
     Value: !Ref ElasticsearchDomainName
     Export: 
       Name: !Sub ${AWS::StackName}-DomainName
+
   DomainArn:
     Value: !GetAtt ElasticsearchDomain.DomainArn
     Export: 
       Name: !Sub ${AWS::StackName}-DomainArn
+      
   DomainEndpoint:
     Value: !GetAtt ElasticsearchDomain.DomainEndpoint
     Export: 
